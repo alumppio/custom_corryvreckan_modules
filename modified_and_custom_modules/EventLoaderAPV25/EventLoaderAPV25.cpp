@@ -180,9 +180,12 @@ StatusCode EventLoaderAPV25::run(const std::shared_ptr<Clipboard>& clipboard) {
 	
 
 	if (res)  {
-		MakePlaneClusters(Hits_Plane_Y, 1);
-		auto pixel = std::make_shared<Pixel>(m_detector->getName().c_str(), std::get<0>(Clusters_Plane_X[0]), std::get<0>(Clusters_Plane_Y[0]), 1, std::get<1>(Clusters_Plane_X[0])+std::get<1>(Clusters_Plane_Y[0]), **evtID);
-		pixel_container.push_back(pixel);
+		bool res2 = MakePlaneClusters(Hits_Plane_Y, 1);
+		
+		if (res2){
+			auto pixel = std::make_shared<Pixel>(m_detector->getName().c_str(), std::get<0>(Clusters_Plane_X[0]), std::get<0>(Clusters_Plane_Y[0]), 1, std::get<1>(Clusters_Plane_X[0])+std::get<1>(Clusters_Plane_Y[0]), **evtID);
+			pixel_container.push_back(pixel);
+		}
 	}
 
 	m_eventNumber++;
