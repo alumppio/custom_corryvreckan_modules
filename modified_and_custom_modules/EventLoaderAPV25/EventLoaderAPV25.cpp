@@ -290,47 +290,49 @@ bool EventLoaderAPV25::MakePlaneClusters(std::vector<std::tuple<int16_t, int16_t
  * Need to fix if one wants to consider a multiple clusters of clusters in one plane 
  *
 int EventLoaderAPV25::MatchPlaneClusters(std::vector<std::tuple<int16_t, int16_t, int16_t>> &clustersX,
-                              						std::vector<std::tuple<int16_t, int16_t, int16_t>> &clustersY) {
+                              						std::vector<std::tuple<int16_t, int16_t, int16_t>> &clustersY){
+
+
+	double ratio_sum = 0;
+	double bestRatio = std::numeric_limits<double>::max();
+	int index = 0;
+	int bestIndex = 0;
+	// Best match according to charge matching
 	
+	// Clear matched cluster containers
+	curXYclusters.clear();
+	allClusters.clear();
 	
-	// Matched clusters < strip_x, strip_y, sum_adcs, charge_ratio, sum_of_hits >
-	std::vector<std::tuple<int16_t, int16_t, int16_t, int16_t, int8_t> bestMatches;
-	
 
-	// Generate a matrix containing all the possible cluster pairs
-	std::vector<std::tuple<int16_t, int16_t, int16_t, int16_t, int8_t>> curXYclusters;
-	std::vector<std::vector<std::tuple<int16_t, int16_t, int16_t, int16_t, int8_t>>> allClusters;
-
-	if (clustersX->size() > clustersY->size()){
-		// Cluster plane:  <strip, sumADCs, clustSize> 
-		for(const auto& x : clustersX){
-				for(const auto& y : clustersY){
-						curXYclusters.emblace_back(std::get<0>(x), std::get<0>(y), static_cast<double>(std::get<1>(y))/std::get<1>(y), static_cast(std::get<2>(x)+std::get<2>(y)));
-					}
-				allClusters.emblace_back(curXYclusters);
-			}
-	}
-
-	
-	for (size_t i=0; i<all
-
-	std::vector<std::tuple<int16_t, int16_t, int16_t, int16_t, int8_t>> Matches;
-	std::vector<std::vector<std::tuple<int16_t, int16_t, int16_t, int16_t, int8_t>>> allMatches;
-
-
-	if (clustersX->size() > clustersY->size()){
-		for (const auto& x : clustersX){
-			// Cluster plane:  <strip, sumADCs, clustSize> 
-			std::tuple<int16_t, int16_t, int16_t, int16_t, int8_t> cur_x
-			do {
-				std::vector<std::tuple<int16_t, int16_t, int16_t, int16_t, int8_t>> cur
-				for (
+	do{
+			for(size_t i=0; i< clustersX->size(); i++){
+				// XYclusters: < x_strip, y_strip, sum_charge, sum_clustSizes, Y_charge/X_charge >
+				curXYclusters.emplace_back(
+						std::get<0>(clustersX[i]), 
+						std::get<0>(clustersY[i]), 
+						std::get<1>(clustersX[i])+std::get<1>(clustersY[i]), 
+						std::get<2>(clustersX[i])+std::get<2>(clustersY[i]), 
+						static_cast<double>(std::get<1>(clustersY[i])) / std::get<1>(clustersX[i])
+					);
+				
+				ratio_sum += static_cast<double>(std::get<1>(clustersY[i])) / std::get<1>(clustersX[i]);
+				}
 			
-	}
-
-	else {
-
+			if(ratio_sum<bestRatio){
+					bestIndex = index;
+					bestRatio = ratio_sum;
+				}
 			
+			ratio_sum = 0;
+			index++;
+			allClusters.push_back(curXYclusters);
+			curXYclusters.clear();
+	}while(std::next_permutation(clustersY.begin(), clustersY.end()));
+
+
+	// Return the best index
+	return bestIndex;
+
 	}
 */
 

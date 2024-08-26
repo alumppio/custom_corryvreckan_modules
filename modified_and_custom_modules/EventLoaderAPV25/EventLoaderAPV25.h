@@ -107,6 +107,15 @@ namespace corryvreckan {
 			std::vector<std::tuple<int16_t, int16_t, int16_t>> Clusters_Plane_X;
 			std::vector<std::tuple<int16_t, int16_t, int16_t>> Clusters_Plane_Y;
 
+
+      // XYclusters: < x_strip, y_strip, sum_charge, sum_clustSizes, Y_charge/X_charge >
+		  std::vector<std::tuple<int16_t, int16_t, int16_t, int16_t, double>> curXYclusters;
+
+			// Container for all matched xy clusters
+		  std::vector<std::vector<std::tuple<int16_t, int16_t, int16_t, int16_t, double>>> allClusters;
+
+
+
 			TH1F * TempPlaneClusterHistogram;
 			TH1F * curMaxHitWaveform;
 			TH1F * maxHitWaveform;
