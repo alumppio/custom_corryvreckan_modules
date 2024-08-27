@@ -1,0 +1,110 @@
+/**
+ * @file
+ * @brief Implementation of module ClusteringGeneric
+ *
+ * @copyright Copyright (c) 2020 CERN and the Corryvreckan authors.
+ * This software is distributed under the terms of the MIT License, copied verbatim in the file "LICENSE.md".
+ * In applying this license, CERN does not waive the privileges and immunities granted to it by virtue of its status as an
+ * Intergovernmental Organization or submit itself to any jurisdiction.
+ * SPDX-License-Identifier: MIT
+ */
+
+#include "ClusteringGeneric.h"
+#include "objects/Pixel.hpp"
+
+#include <TBranch.h>
+#include <TKey.h>
+#include <TObjArray.h>
+#include <TProcessID.h>
+#include <TTree.h>
+
+#include <TTreeReader.h>
+#include <TTreeReaderValue.h>
+#include <TTreeReaderArray.h>
+
+#include "objects/Object.hpp"
+#include "objects/objects.h"
+
+using namespace corryvreckan;
+
+ClusteringGeneric::ClusteringGeneric(Configuration& config, std::shared_ptr<Detector> detector)
+  : Module(config, detector), m_detector(detector) {
+
+    config_.setDefault<std::string>("file_input", "Ttree.root");
+    fileInput = config_.get<std::string>("file_input");
+
+  }
+
+ClusteringGeneric::~ClusteringGeneric(){
+}
+
+void ClusteringGeneric::initialize() {
+
+  // Checking Geometric file inputs
+  for(auto& detector : get_detectors()) {
+    LOG(DEBUG) << "Initialise for detector " + detector->getName();
+  }
+
+  LOG(DEBUG) << "Detector Name: " << m_detector->getName();
+  LOG(DEBUG) << "size X: " << m_detector->getSize().X();
+  LOG(DEBUG) << "size Y: " << m_detector->getSize().Y();
+  LOG(DEBUG) << "Pixel size X: " << m_detector->nPixels().X();
+  LOG(DEBUG) << "Pixel size Y: " << m_detector->nPixels().Y();
+  LOG(DEBUG) << "Pitch size X: " << m_detector->getPitch().X();
+  LOG(DEBUG) << "Pitch size Y: " << m_detector->getPitch().Y();
+
+  // Initialise member variables
+  m_eventNumber = 0;
+
+  TFile *myFile = TFile::Open(fileInput.c_str());
+  reader = new TTreeReader("TCluster", myFile);
+
+  evtID = new TTreeReaderArray<int>(*reader, "evtID");
+  detID = new TTreeReaderArray<int>(*reader, "detID");
+  planeID = new TTreeReaderArray<int>(*reader, "planeID");
+  clustPos = new TTreeReaderArray<float>(*reader, "clustPos");
+
+}
+
+StatusCode ClusteringGeneric::run(const std::shared_ptr<Clipboard>& clipboard) {
+
+  reader->SetLocalEntry(m_eventNumber);
+
+  LOG(DEBUG) << "evt Corryvreckan___: " << m_eventNumber;
+  LOG(DEBUG) << "evtID___: " << evtID->At(0);
+
+  // Loop over all detectors
+  for(auto& detector : get_detectors()) {
+    // Get the detector name
+    std::string detectorName = detector->getName();
+    LOG(DEBUG) << "Detector with name " << detectorName;
+    LOG(DEBUG) << "File Input: " << fileInput;
+
+    // Excluding DUT detector, since no position
+    if(strcmp(detectorName.c_str(), "dut")==0) continue;
+
+    // Considering only one hit point (x,y) per telescope
+    if(detID->GetSize()>6) continue;
+
+    int detectorID=-1;
+    if(strcmp(detectorName.c_str(), "telescope0")==0) detectorID=0;
+    if(strcmp(detectorName.c_str(), "telescope1")==0) detectorID=1;
+    if(strcmp(detectorName.c_str(), "telescope2")==0) detectorID=2;
+    for (size_t i = 0; i < detID->GetSize(); i++) {
+      if(detID->At(i)!=detectorID) continue;
+      LOG(DEBUG) << "detID___: " << detID->At(i);
+      if(planeID->At(i)==0) LOG(DEBUG) << "clustPos_X_: " << clustPos->At(i);
+      if(planeID->At(i)==1) LOG(DEBUG) << "clustPos_Y_: " << clustPos->At(i);
+    }
+  }
+
+  // Increment event counter
+  m_eventNumber++;
+
+  // Return value telling analysis to keep running
+  return StatusCode::Success;
+}
+
+void ClusteringGeneric::finalize(const std::shared_ptr<ReadonlyClipboard>&) {
+  LOG(DEBUG) << "Analysed " << m_eventNumber << " events";
+}

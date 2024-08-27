@@ -1,0 +1,268 @@
+/**
+ * @file
+ * @brief Implementation of module ClusteringGeneric
+ *
+ * @copyright Copyright (c) 2020 CERN and the Corryvreckan authors.
+ * This software is distributed under the terms of the MIT License, copied verbatim in the file "LICENSE.md".
+ * In applying this license, CERN does not waive the privileges and immunities granted to it by virtue of its status as an
+ * Intergovernmental Organization or submit itself to any jurisdiction.
+ * SPDX-License-Identifier: MIT
+ */
+
+#include "ClusteringGeneric.h"
+#include "objects/Pixel.hpp"
+
+#include <TBranch.h>
+#include <TKey.h>
+#include <TObjArray.h>
+#include <TProcessID.h>
+#include <TTree.h>
+
+#include <TTreeReader.h>
+#include <TTreeReaderValue.h>
+#include <TTreeReaderArray.h>
+
+#include "objects/Object.hpp"
+#include "objects/objects.h"
+
+using namespace corryvreckan;
+
+ClusteringGeneric::ClusteringGeneric(Configuration& config, std::shared_ptr<Detector> detector)
+  : Module(config, detector), m_detector(detector) {
+
+    config_.setDefault<std::string>("file_input", "Ttree.root");
+    fileInput = config_.get<std::string>("file_input");
+
+  }
+
+ClusteringGeneric::~ClusteringGeneric(){
+
+  ////for(auto object_inf : object_info_array_) {
+  ////   delete object_inf.objects;
+  //// }
+
+}
+
+void ClusteringGeneric::initialize() {
+
+  // Opening a TTree file
+  input_file_ = std::make_unique<TFile>(config_.getPath("file_input", true).c_str());
+
+  // Read all the trees in the file
+  TList* keys = input_file_->GetListOfKeys();
+  std::set<std::string> tree_names;
+
+  for(auto&& object : *keys) {
+    auto& key = dynamic_cast<TKey&>(*object);
+    if(std::string(key.GetClassName()) == "TTree") {
+      auto tree = static_cast<TTree*>(key.ReadObjectAny(nullptr));
+
+      if(tree->GetName() == std::string("TCluster")) {
+	LOG(TRACE) << "Found Event object tree " << tree->GetName();
+	event_tree_ = tree;
+	trees_.push_back(event_tree_);
+	continue;
+      }
+
+      // Check if a version of this tree has already been read
+      if(tree_names.find(tree->GetName()) != tree_names.end()) {
+	LOG(TRACE) << "Skipping copy of tree with name " << tree->GetName()
+	  << " because one with identical name has already been processed";
+	continue;
+      }
+
+      tree_names.insert(tree->GetName());
+
+      // Check if this tree should be used
+      if((!include_.empty() && include_.find(tree->GetName()) == include_.end()) ||
+	  (!exclude_.empty() && exclude_.find(tree->GetName()) != exclude_.end())) {
+	LOG(TRACE) << "Ignoring tree with " << tree->GetName()
+	  << " objects because it has been excluded or not explicitly included";
+	continue;
+      }
+
+      //trees_.push_back(tree_);
+
+    }
+  }
+
+
+  if(trees_.empty()) {
+    throw ModuleError("Provided ROOT file does not contain any trees, module cannot read any data");
+  }
+
+  // Prepare event branch:
+  if(event_tree_ == nullptr) {
+    throw ModuleError("Could not find \"Event\" tree to read event definitions from");
+  }
+
+  // Loop over the list of branches and create the set of receiver objects
+  TObjArray* event_branches = event_tree_->GetListOfBranches();
+
+  // Check the number of branches of our amore ttree
+  if(event_branches->GetEntries() != 9) {
+    throw ModuleError("\"Event\" tree invalid, cannot read event data from file");
+  }
+
+  auto* event_branch = static_cast<TBranch*>(event_branches->At(0));
+  event_ = new Event();
+  event_branch->SetAddress(&event_);
+
+  LOG(TRACE) << "TTREE SIZE " << trees_.size();
+
+  // Loop over all found trees
+  for(auto& tree : trees_) {
+    // Loop over the list of branches and create the set of receiver objects
+    TObjArray* branches = tree->GetListOfBranches();
+    LOG(TRACE) << "Tree \"" << tree->GetName() << "\" has " << branches->GetEntries() << " branches";
+    for(int i = 0; i < branches->GetEntries(); i++) {
+      auto* branch = static_cast<TBranch*>(branches->At(i));
+
+      // Add a new vector of objects and bind it to the branch
+      ////object_info object_inf;
+      ////object_inf.objects = new std::vector<Object*>;
+      ////object_info_array_.emplace_back(object_inf);
+      ////branch->SetAddress(&(object_info_array_.back().objects));
+      LOG(TRACE) << "Branch Name \"" << branch->GetName();
+
+
+      std::string branch_name = branch->GetName();
+      ////if(branch_name != "evtID") {
+      // Check if detector is registered by fetching it:
+      //auto detector = get_detector(detector->getName());
+      ////object_info_array_.back().detector = m_detector->getName();
+      ////}
+
+
+
+
+      // Check tree structure and if object type matches name
+
+      /*
+	 auto split_type = corryvreckan::split<std::string>(branch->GetClassName(), "<>");
+	 if(split_type.size() != 2 || split_type[1].size() <= 2) {
+	 throw ModuleError("Tree is malformed and cannot be used for creating objects");
+	 }
+	 std::string class_name = split_type[1].substr(0, split_type[1].size() - 1);
+	 std::string corry_namespace = "corryvreckan::";
+	 size_t corry_idx = class_name.find(corry_namespace);
+	 if(corry_idx != std::string::npos) {
+	 class_name.replace(corry_idx, corry_namespace.size(), "");
+	 }
+	 if(class_name != tree->GetName()) {
+	 throw ModuleError("Tree contains objects of the wrong type");
+	 }
+	 */
+
+      /*
+	 std::string branch_name = branch->GetName();
+	 if(branch_name != "global") {
+      // Check if detector is registered by fetching it:
+      auto detector = get_detector(branch_name);
+      object_info_array_.back().detector = branch_name;
+      }
+      */     
+
+    }
+  }
+
+  // Checking Geometric file inputs
+  for(auto& detector : get_detectors()) {
+    LOG(DEBUG) << "Initialise for detector " + detector->getName();
+  }
+
+  LOG(DEBUG) << "Detector Name: " << m_detector->getName();
+  LOG(DEBUG) << "size X: " << m_detector->getSize().X();
+  LOG(DEBUG) << "size Y: " << m_detector->getSize().Y();
+  LOG(DEBUG) << "Pixel size X: " << m_detector->nPixels().X();
+  LOG(DEBUG) << "Pixel size Y: " << m_detector->nPixels().Y();
+  LOG(DEBUG) << "Pitch size X: " << m_detector->getPitch().X();
+  LOG(DEBUG) << "Pitch size Y: " << m_detector->getPitch().Y();
+
+  // Initialise member variables
+  m_eventNumber = 0;
+
+}
+
+StatusCode ClusteringGeneric::run(const std::shared_ptr<Clipboard>& clipboard) {
+
+  // Acquire ROOT TProcessID resource lock and reset PIDs:
+  //  auto root_lock = root_process_lock();
+
+  /*
+     if(clipboard->isEventDefined()) {
+     ModuleError("Clipboard event already defined, cannot continue");
+     }
+     */
+
+  /*
+  // Read event object from tree and store it on the clipboard:
+  event_tree_->GetEntry(m_eventNumber);
+  //clipboard->putEvent(std::make_shared<Event>(*event_));
+  //read_cnt_++;
+  TBranch *test;
+  test = event_tree_->GetBranch("evtID");
+  LOG(DEBUG) << "evtID: " << test->GetEntry(m_eventNumber) << ", m_eventNumber: " << m_eventNumber;
+
+  TBranch *test1;
+  test1 = event_tree_->GetBranch("detID");
+  LOG(DEBUG) << "detID: " << test1->GetEntry(m_eventNumber) << ", m_eventNumber: " << m_eventNumber;
+
+
+  TObjArray* event_branches = event_tree_->GetListOfBranches(); 
+  for(auto& tree : trees_) {
+  LOG(TRACE) << "Reading tree \"" << tree->GetName() << "\"";
+  tree->GetEntry(m_eventNumber);
+  auto* event_branch = static_cast<TBranch*>(event_branches->At(m_eventNumber));
+  event_ = new Event();
+  event_branch->SetAddress(&event_);
+  LOG(DEBUG) << "Event by Event: Branch Name: " << event_branch->GetName() << ", value: " << event_branch->At(m_eventNumber); 
+  }
+
+
+  LOG(TRACE) << "Putting stored objects on the clipboard";
+  */
+
+  TFile *myFile = TFile::Open("/eos/project/h/h8ctb/H8TB-202309-DP/amore/H8_September2023_TOTEM.root_Run1888.000_dataTree.root");
+  TTreeReader reader("TCluster", myFile);
+  TTreeReaderArray<int> detID(reader, "detID");
+  //if (!CheckValue(detID)) return false;
+
+
+  //while (reader.Next()) {
+  reader.SetLocalEntry(m_eventNumber);
+
+  LOG(DEBUG) << "Analysed " << m_eventNumber << " events";
+    LOG(DEBUG) << "detID: " << detID.GetSize(); 
+  //}
+
+  // Loop over all detectors
+  for(auto& detector : get_detectors()) {
+    // Get the detector name
+    std::string detectorName = detector->getName();
+    LOG(DEBUG) << "Detector with name " << detectorName;
+    LOG(DEBUG) << "File Input: " << fileInput;
+  }
+
+  // Increment event counter
+  m_eventNumber++;
+
+  // Return value telling analysis to keep running
+  return StatusCode::Success;
+}
+
+void ClusteringGeneric::finalize(const std::shared_ptr<ReadonlyClipboard>&) {
+
+  LOG(DEBUG) << "Analysed " << m_eventNumber << " events";
+}
+
+/*
+   bool ClusteringGeneric::CheckValue(ROOT::TTreeReaderValueBase& value) {
+   if (value->GetSetupStatus() < 0) {
+   std::cerr << "Error " << value->GetSetupStatus()
+   << "setting up reader for " << value->GetBranchName() << '\n';
+   return false;
+   }
+   return true;
+   }
+   */

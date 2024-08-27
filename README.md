@@ -39,6 +39,13 @@ $ cp <path_to_modified_Tracking4D> .
 $ cp <path_to_new_module> . 
 ```
 
+**After this you need to install corryvreckan again!** This means that you only need to go to the build folder and run *make install* again. Also everytime you change something in the modules, you need run *make install* so the changes will be applied. You should alias this *make install* in the build folder to some command, makes life easier.
+
+```
+>> After making changes to modules
+$ make install
+```
+
 
 
 ## Getting started with corryvreckan
