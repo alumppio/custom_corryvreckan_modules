@@ -43,7 +43,7 @@ $ cp <path_to_new_module> .
 
 ## Getting started with corryvreckan
 
-There is a list of tutorials and references on the [corryvreckan project website](https://project-corryvreckan.web.cern.ch/project-corryvreckan/page/publications/). You can also find the detailed user manual that describes the whole framework under the documentations and references tab ([link for manual-v2.0.1](https://project-corryvreckan.web.cern.ch/project-corryvreckan/usermanual/corryvreckan-manual-v2.0.1.pdf).
+There is a list of tutorials and references on the [corryvreckan project website](https://project-corryvreckan.web.cern.ch/project-corryvreckan/page/publications/). You can also find the detailed user manual that describes the whole framework under the documentations and references tab ([link for manual-v2.0.1](https://project-corryvreckan.web.cern.ch/project-corryvreckan/usermanual/corryvreckan-manual-v2.0.1.pdf)).
 
 There is also a quite detailed [lab course on silicon sensors](https://www.physi.uni-heidelberg.de/Einrichtungen/FP/anleitungen/F96.pdf) where corryvreckan is used.
 
