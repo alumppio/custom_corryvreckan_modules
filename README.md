@@ -10,6 +10,7 @@ $ git clone https://gitlab.cern.ch/corryvreckan/corryvreckan.git
 $ cd corryvreckan
 $ mkdir build && cd build/
 $ cmake ..
+>> also $ source etc/setup_lxplus.sh (for lxplus) !! 
 $ make install
 ```
 
