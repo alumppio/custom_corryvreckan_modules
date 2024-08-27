@@ -54,5 +54,6 @@ There is a list of tutorials and references on the [corryvreckan project website
 
 There is also a quite detailed [lab course on silicon sensors](https://www.physi.uni-heidelberg.de/Einrichtungen/FP/anleitungen/F96.pdf) where corryvreckan is used.
 
+### Some tips for troubleshooting
 
-
+If your are looking at plots and they seem weird, check the binning and how it is filled in the source code of the module. 
