@@ -11,7 +11,6 @@ $ cd corryvreckan
 $ mkdir build && cd build/
 $ cmake ..
 >> also $ source etc/setup_lxplus.sh (for lxplus) !! 
-$ make install
 ```
 
 ## To use my custom modules
@@ -40,10 +39,11 @@ $ cp <path_to_modified_Tracking4D> .
 $ cp <path_to_new_module> . 
 ```
 
-**After this you need to install corryvreckan again!** This means that you only need to go to the build folder and run *make install* again. Also everytime you change something in the modules, you need run *make install* so the changes will be applied. You should alias this *make install* in the build folder to some command, makes life easier.
+**After this you need to install corryvreckan!** This means that you only need to go to the build folder and run *make install*. Also everytime you change something in the modules, you need run *make install* so the changes will be applied. You should alias this *make install* in the build folder to some command, makes life easier.
+
+>> After making changes to modules go to the corryvreckan/build folder and run. Also if you are using lxplus remember to also source etc/setup\_lxplus.sh in corryvreckan folder
 
 ```
->> After making changes to modules
 $ make install
 ```
 
