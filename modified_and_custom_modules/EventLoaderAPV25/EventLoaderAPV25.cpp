@@ -45,8 +45,11 @@ EventLoaderAPV25::~EventLoaderAPV25(){
 void EventLoaderAPV25::initialize() {
 
 
-	std::string title = m_detector->getName() + "cluster_max_adc_full_waveform;ADC_timebin; ADC_counts";
-	maxHitWaveform = new TH1F("maxHitWaveform", title.c_str(), 20, 0, 20);
+	std::string title = m_detector->getName() + "x_cluster_max_adc_full_waveform;ADC_timebin; ADC_counts";
+	maxHitWaveform_x = new TH1F("maxHitWaveform_x", title.c_str(), 20, 0, 20);
+
+	title = m_detector->getName() + "y_cluster_max_adc_full_waveform;ADC_timebin; ADC_counts";
+	maxHitWaveform_y = new TH1F("maxHitWaveform_y", title.c_str(), 20, 0, 20);
 
 	data_file = TFile::Open(m_inputFile.c_str());
 	if (!data_file || data_file->IsZombie()){
@@ -181,10 +184,19 @@ StatusCode EventLoaderAPV25::run(const std::shared_ptr<Clipboard>& clipboard) {
 
 	if (res)  {
 		bool res2 = MakePlaneClusters(Hits_Plane_Y, 1);
-		
+
 		if (res2){
-			auto pixel = std::make_shared<Pixel>(m_detector->getName().c_str(), std::get<0>(Clusters_Plane_X[0]), std::get<0>(Clusters_Plane_Y[0]), 1, std::get<1>(Clusters_Plane_X[0])+std::get<1>(Clusters_Plane_Y[0]), **evtID);
-			pixel_container.push_back(pixel);
+			LOG(DEBUG) << "was here1";
+			int bestPairsIndex = MatchPlaneClusters(Clusters_Plane_X, Clusters_Plane_Y);
+		
+			for (auto &xyClust : allClusters[bestPairsIndex]){
+				// Pixel args:
+				//  	=  [detector_name, strip_x (col), strip_y (row), raw (set to 1 if not known), sumALLADCs (charge), evtID (time)]
+
+				auto pixel = std::make_shared<Pixel>(m_detector->getName().c_str(), std::get<0>(xyClust), std::get<1>(xyClust), 1, std::get<2>(xyClust), **evtID);
+				LOG(DEBUG) << "Made Pixel:  " << std::get<0>(xyClust) << ",  " << std::get<1>(xyClust) << ",  1,  " << std::get<2>(xyClust) << ",  "<< **evtID;
+				pixel_container.push_back(pixel);
+			}
 		}
 	}
 
@@ -193,7 +205,7 @@ StatusCode EventLoaderAPV25::run(const std::shared_ptr<Clipboard>& clipboard) {
   // Putting data to the clipboard, if empty and empty vector will be filled
   clipboard->putData(pixel_container, m_detector->getName());
 
-	LOG(DEBUG) << std::endl;
+	LOG(DEBUG) << "===========================================================================" << std::endl;
 
   // Return value telling analysis to keep running
   if(reader->GetEntries()==m_eventNumber) return StatusCode::EndRun;
@@ -205,7 +217,6 @@ bool EventLoaderAPV25::MakePlaneClusters(std::vector<std::tuple<int16_t, int16_t
 	// No pedestal value --> 1-2 ADC count error in charge!
 	
 	TempPlaneClusterHistogram = new TH1F("PlaneCluster", "strip", 256, 0, 256);
-	curMaxHitWaveform = new TH1F("curMaxHitWaveform", "timebin", 20, 0, 20);
 	int lastStrip=-1;
 	int maxAdc=-9999;
 	int sumAdcs=0;
@@ -239,11 +250,29 @@ bool EventLoaderAPV25::MakePlaneClusters(std::vector<std::tuple<int16_t, int16_t
 				// Cluster_Plane < strip, sumAdcs, cluster_size >
 				if (which_plane==0) { // X plane
 					Clusters_Plane_X.emplace_back(TempPlaneClusterHistogram->GetFunction("gaus")->GetParameter(1), sumAdcs, hitsCount);
+					
+					for (int i=0; i<14; i++){
+            // negative values not filled
+            if (adcs->at(i)->At(maxIndex) > 0) {
+              LOG(DEBUG) << "adcs->at(maxIndex)->At(" << i <<") = " << adcs->at(i)->At(maxIndex);
+              maxHitWaveform_x->Fill(i, adcs->at(i)->At(maxIndex));
+              }
+            }				
 				}
 				else if (which_plane==1) { // Y plane
 					Clusters_Plane_Y.emplace_back(TempPlaneClusterHistogram->GetFunction("gaus")->GetParameter(1), sumAdcs, hitsCount);
+					
+					for (int i=0; i<14; i++){
+            // negative values not filled
+            if (adcs->at(i)->At(maxIndex) > 0) {
+              LOG(DEBUG) << "adcs->at(maxIndex)->At(" << i <<") = " << adcs->at(i)->At(maxIndex);
+              maxHitWaveform_y->Fill(i, adcs->at(i)->At(maxIndex));
+              }
+            }				
 				}
-				
+          
+
+
 				clusterCount++;
 				}
 
@@ -266,29 +295,43 @@ bool EventLoaderAPV25::MakePlaneClusters(std::vector<std::tuple<int16_t, int16_t
 		// Cluster_Plane < strip, sumAdcs, cluster_size >
 		if (which_plane==0){ // X plane
 			Clusters_Plane_X.emplace_back(TempPlaneClusterHistogram->GetFunction("gaus")->GetParameter(1), sumAdcs, hitsCount);
+
+					for (int i=0; i<14; i++){
+            // negative values not filled
+            if (adcs->at(i)->At(maxIndex) > 0) {
+              LOG(DEBUG) << "adcs->at(maxIndex)->At(" << i <<") = " << adcs->at(i)->At(maxIndex);
+              maxHitWaveform_y->Fill(i, adcs->at(i)->At(maxIndex));
+              }
+            }				
+		
 		}
 		else if (which_plane==1){ // Y plane
 			Clusters_Plane_Y.emplace_back(TempPlaneClusterHistogram->GetFunction("gaus")->GetParameter(1), sumAdcs, hitsCount);
+					
+					for (int i=0; i<14; i++){
+            // negative values not filled
+            if (adcs->at(i)->At(maxIndex) > 0) {
+              LOG(DEBUG) << "adcs->at(maxIndex)->At(" << i <<") = " << adcs->at(i)->At(maxIndex);
+              maxHitWaveform_y->Fill(i, adcs->at(i)->At(maxIndex));
+              }
+            }				
+		
 		}
 
 		clusterCount++;
 	} 
 
 	delete TempPlaneClusterHistogram;
-	delete curMaxHitWaveform;
 	
-	// If there are more than 1 clusters in one plane, tracking is not done
-	if (clusterCount==1) return true;
+	// If there are more than 6 clusters in one plane, tracking is not done
+	if (clusterCount>=1 && clusterCount<=4) return true;
 	
-	// No clusters
+	// No clusters or more than 6 clusters on one plane
 	return false;
 }
 
 
-/*
- *
- * Need to fix if one wants to consider a multiple clusters of clusters in one plane 
- *
+
 int EventLoaderAPV25::MatchPlaneClusters(std::vector<std::tuple<int16_t, int16_t, int16_t>> &clustersX,
                               						std::vector<std::tuple<int16_t, int16_t, int16_t>> &clustersY){
 
@@ -299,42 +342,53 @@ int EventLoaderAPV25::MatchPlaneClusters(std::vector<std::tuple<int16_t, int16_t
 	int bestIndex = 0;
 	// Best match according to charge matching
 	
+			LOG(DEBUG) << "was here2";
 	// Clear matched cluster containers
 	curXYclusters.clear();
 	allClusters.clear();
+
 	
+	// Need only half of the permutations, so we fix the x indices, and consider the permutations of 
+	// the y clusters.
 
 	do{
-			for(size_t i=0; i< clustersX->size(); i++){
+			LOG(DEBUG) << "was here3";
+			for(size_t i=0; i< clustersX.size(); i++){
 				// XYclusters: < x_strip, y_strip, sum_charge, sum_clustSizes, Y_charge/X_charge >
+				
+				LOG(DEBUG) << "charge_ratio: " << static_cast<double>(std::get<1>(clustersY[i])) / std::get<1>(clustersX[i]);
+				
 				curXYclusters.emplace_back(
 						std::get<0>(clustersX[i]), 
 						std::get<0>(clustersY[i]), 
 						std::get<1>(clustersX[i])+std::get<1>(clustersY[i]), 
 						std::get<2>(clustersX[i])+std::get<2>(clustersY[i]), 
 						static_cast<double>(std::get<1>(clustersY[i])) / std::get<1>(clustersX[i])
-					);
-				
+				);
 				ratio_sum += static_cast<double>(std::get<1>(clustersY[i])) / std::get<1>(clustersX[i]);
 				}
 			
-			if(ratio_sum<bestRatio){
+			LOG(DEBUG) << "ratio_sum: " << ratio_sum;
+			
+			if(ratio_sum<bestRatio && 0.5<ratio_sum/clustersX.size() && ratio_sum/clustersX.size()<1.5){
 					bestIndex = index;
 					bestRatio = ratio_sum;
 				}
 			
+			LOG(DEBUG) << "best_ratio " << bestRatio;
 			ratio_sum = 0;
 			index++;
 			allClusters.push_back(curXYclusters);
 			curXYclusters.clear();
 	}while(std::next_permutation(clustersY.begin(), clustersY.end()));
 
+			LOG(DEBUG) << "was here4";
 
 	// Return the best index
 	return bestIndex;
 
 	}
-*/
+
 
 
 void EventLoaderAPV25::finalize(const std::shared_ptr<ReadonlyClipboard>&) {

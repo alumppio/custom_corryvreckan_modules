@@ -74,8 +74,8 @@ namespace corryvreckan {
        */
 
 			bool MakePlaneClusters(std::vector<std::tuple<int16_t, int16_t, int8_t>> &hitsPlane, int which_plane);
-//			int MatchPlaneClusters(std::vector<std::tuple<int16_t, int16_t, int16_t>> &clustersX, 
-//															std::vector<std::tuple<int16_t, int16_t, int16_t>> &clustersY);
+			int MatchPlaneClusters(std::vector<std::tuple<int16_t, int16_t, int16_t>> &clustersX, 
+															std::vector<std::tuple<int16_t, int16_t, int16_t>> &clustersY);
 			
       std::shared_ptr<Detector> m_detector;
 
@@ -109,16 +109,17 @@ namespace corryvreckan {
 
 
       // XYclusters: < x_strip, y_strip, sum_charge, sum_clustSizes, Y_charge/X_charge >
-		  std::vector<std::tuple<int16_t, int16_t, int16_t, int16_t, double>> curXYclusters;
+		  std::vector<std::tuple<int, int, int, int, double>> curXYclusters;
 
 			// Container for all matched xy clusters
-		  std::vector<std::vector<std::tuple<int16_t, int16_t, int16_t, int16_t, double>>> allClusters;
+		  std::vector<std::vector<std::tuple<int, int, int, int, double>>> allClusters;
 
 
 
 			TH1F * TempPlaneClusterHistogram;
 			TH1F * curMaxHitWaveform;
-			TH1F * maxHitWaveform;
+			TH1F * maxHitWaveform_x;
+			TH1F * maxHitWaveform_y;
 
 
 			Long64_t number_of_entries=0;
