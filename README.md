@@ -36,9 +36,7 @@ $ cp <all_other_modules> .
 **After this you need to install corryvreckan!** This means that you only need to go to the build folder and run *make install*. Also everytime you change something in the modules, you need run *make install* so the changes will be applied. You should alias this *make install* in the build folder to some command, makes life easier.
 
 
->> After making changes to modules go to the corryvreckan/build folder and run. Also if you are using lxplus remember to also source etc/setup\_lxplus.sh in corryvreckan folder
-
-
+> After making changes to modules go to the corryvreckan/build folder and run. Also if you are using lxplus remember to also source etc/setup\_lxplus.sh in corryvreckan folder
 
 ```
 >> If you are using lxplus, in <corryvreckan>
