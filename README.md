@@ -5,48 +5,47 @@ To install the default version of corryvreckan you need to have [ROOT](https://r
 ```
 $ git clone https://gitlab.cern.ch/corryvreckan/corryvreckan.git
 ```
-**Then you need to compile and install it**
+**Then you need to compile, but not install it until you have added my custom modules**
 ```
 $ cd corryvreckan
 $ mkdir build && cd build/
 $ cmake ..
->> also $ source etc/setup_lxplus.sh (for lxplus) !! 
 ```
 
 ## To use my custom modules
 
-I have made quite a lot of changes to the default corryvreckan installation. I don't remember all of them, but I included a folder that contains most (or almost all) of the modules I modified or created. You need to copy this to some folder presumably not inside corryvreckan, as I don't known if this will cause errors. Then you need to manually remove the modules that I have modified, and only copy those modules that I have created as new modules. One way you could do this is that you go in the *corryvreckan/src/modules* folder and use *rm -r* to delete the directories.
-
+I have made quite a lot of changes to the default corryvreckan installation. I don't remember all of them, but I included a folder that contains most (or almost all) of the modules I modified or created. You need to copy this to some folder presumably not inside corryvreckan, as I don't known if this will cause errors. Then you have to go to the source code modules folder *corryvreckan/src/modules/* and copy the modules that I have created. If the module is already present in the default version you have created with cmake, then the module I have in my folder is a modified one and you need to overwrite it in the default version.
 
 ### Copy my repository
 ```
 $ git clone https://github.com/alumppio/custom_corryvreckan_modules.git <desired_path>
 ```
 
-### Deleting default modules and copying the updated ones
+### Copying the modified modules and the new modules to <corryvreckan/src/modules>
 ```
 >> For the modified modules
 $ cd corryvreckan/src/modules
 $ rm -r Tracking4D
 $ cp <path_to_modified_Tracking4D> .
-... 
-```
-
-
-### Copying the new modules to <.../corryvreckan/src/modules>
-```
 >> For the new modules
-$ cp <path_to_new_module> . 
+$ cp <all_other_modules> . 
 ```
+
+### Installing the custom corryvreckan vesrion
 
 **After this you need to install corryvreckan!** This means that you only need to go to the build folder and run *make install*. Also everytime you change something in the modules, you need run *make install* so the changes will be applied. You should alias this *make install* in the build folder to some command, makes life easier.
 
+
 >> After making changes to modules go to the corryvreckan/build folder and run. Also if you are using lxplus remember to also source etc/setup\_lxplus.sh in corryvreckan folder
 
+
+
 ```
+>> If you are using lxplus, in <corryvreckan>
+$ source etc/setup_lxplus.sh
+>> Installing in <corryvreckan/build>
 $ make install
 ```
-
 
 
 ## Getting started with corryvreckan
