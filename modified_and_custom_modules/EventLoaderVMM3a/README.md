@@ -3,26 +3,23 @@
 # SPDX-License-Identifier: CC-BY-4.0 OR MIT
 ---
 # EventLoaderVMM3a
-**Maintainer**: alumppio (lxplus978.cern.ch)
-**Module Type**: *DETECTOR* **Detector Type**: *<add types here>*  
+**Maintainer**: Antti Lumppio	(antti.lumppio@helsinki.fi)
+**Module Type**: *DETECTOR* **Detector Type**: *<GEM detector>*  
 **Status**: Immature
 
 ### Description
-This is a demonstrator module only, taking data every detector on the clipboard and plots the pixel hit positions.
-It serves as template to create new modules.
+This module is used in the long pixel approach. The module reads in VMM3a data in vmm-sdat hits TTree format. From this hits data, Pixel objects for each strip hit are created.
 
 ### Parameters
-No parameters are used from the configuration file.
+* `file_input`: The input data file that contains the hits TTree.
 
 ### Plots produced
-* Histogram of event numbers
-
-For each detector the following plots are produced:
-
-* 2D histogram of pixel hit positions
+No plots are produced.
 
 ### Usage
 ```toml
 [EventLoaderVMM3a]
+file_input = "data_file"
+
 
 ```

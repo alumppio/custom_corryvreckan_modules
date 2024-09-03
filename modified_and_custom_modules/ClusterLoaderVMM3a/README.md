@@ -3,26 +3,26 @@
 # SPDX-License-Identifier: CC-BY-4.0 OR MIT
 ---
 # ClusterLoaderVMM3a
-**Maintainer**: alumppio (lxplus9113.cern.ch)
-**Module Type**: *DETECTOR* **Detector Type**: *<add types here>*  
+**Maintainer**: Antti Lumppio (antti.lumppio@helsinki.fi)
+**Module Type**: *DETECTOR* **Detector Type**: *<GEM detector>*  
 **Status**: Immature
 
 ### Description
-This is a demonstrator module only, taking data every detector on the clipboard and plots the pixel hit positions.
-It serves as template to create new modules.
+This module loads in vmm-sdat VMM3a data from clusters\_detector ROOT TTree. From these matched XY clusters, Pixel objects are created with pos0 as the column and pos1 as the row. The pixel's charge is the sum of the X- and Y-plane cluster charges. 
+
 
 ### Parameters
-No parameters are used from the configuration file.
+* `file\_input`: The ROOT file name that contains the clusters\_detector TTree.
+* `pos\_input\_type`: Specifies the reconstructed position type from vmm-sdat that you want to use to create the Pixel objects. Currently supports only `pos` and `charge2_pos`, defaults to `pos`.
+
+
 
 ### Plots produced
-* Histogram of event numbers
-
-For each detector the following plots are produced:
-
-* 2D histogram of pixel hit positions
+No plots produced. 
 
 ### Usage
 ```toml
 [ClusterLoaderVMM3a]
+file_input = "data_file"
 
 ```

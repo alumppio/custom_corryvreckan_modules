@@ -2,32 +2,20 @@
 # SPDX-FileCopyrightText: 2017-2023 CERN and the Corryvreckan authors
 # SPDX-License-Identifier: CC-BY-4.0 OR MIT
 ---
-# TreeWriterDUT
-**Maintainer**: Morag Williams (<morag.williams@cern.ch>)   
-**Module Type**: *DUT*  
-**Detector Type**: *all*  
-**Status**: Functional  
+# TreeWriter
+**Maintainer**: Antti Lumppio (antti.lumppio@helsinki.fi), Diego Figueiredo (dmf@cern.ch)
+**Detector Type**: *<GEM detector>*  
+**Status**: Immature
 
 ### Description
-This module writes out data from a Timepix3 DUT for timing analysis. The output ROOT tree contains data in branches. This is intended for analysis of the timing capabilities of Timepix3 devices of different thicknesses.
+This module takes inspiration from the default `[DUTTreeWriter]` module. This module writes out the cluster data in a ROOT TTree of the clusters that are part of Track objects. Best used with [ClusteringGeneric], as this module utilizes data associated with EventIDs, like APV25 data. This module can be used to create DUT track residuals. 
 
-For each track associated DUT `cluster` object the following information is written out:
+For each track the following information is written out:
+* EventID
+* Cluster positions in X and Y of the clusters that are part of the track
+* Cluster charges of the clusters that are part of the track
+* Track intercepts for each detector
 
-* Event ID
-* Size in X
-* Size in Y
-* Number of pixels in the cluster
-
-For each `pixel` object in an associated `cluster` the following information is written out:
-
-* X position
-* Y position
-* ToT
-* ToA
-
-For each `track` with associated DUT `clusters` the following information is written out:
-
-* Intercept with the DUT (3D position vector)
 
 ### Parameters
 * `file_name`: Name of the data file to create, relative to the output directory of the framework. The file extension `.root` will be appended if not present. Default value is `outputTuples.root`.

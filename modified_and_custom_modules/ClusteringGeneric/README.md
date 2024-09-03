@@ -3,16 +3,17 @@
 # SPDX-License-Identifier: CC-BY-4.0 OR MIT
 ---
 # ClusteringGeneric
-**Maintainer**: Diego Figueiredo (dmf@cern.ch)
-**Module Type**: *DETECTOR* **Detector Type**: *<add types here>*  
+**Maintainer**: Diego Figueiredo (dmf@cern.ch), Antti Lumppio (antti.lumppio@helsinki.fi)
+**Module Type**: *DETECTOR* **Detector Type**: *<GEM detector>*  
 **Status**: Immature
 
 ### Description
-This is a demonstrator module only, taking data every detector on the clipboard and plots the pixel hit positions.
-It serves as template to create new modules.
+This module takes in APV25 data in AMORE TCluster format. From this cluster data, this module creates Cluster objects. Events with only a single hit per telescope are read in. 
 
 ### Parameters
-No parameters are used from the configuration file.
+* `file_input`: The ROOT file name that contains the TCluster TTree.
+* `noise_cut`: The noise cut applied to read in Clusters. If the charge of cluster doesn't go above this value, the cluster isn't read in.
+
 
 ### Plots produced
 * Histogram of event numbers
@@ -24,5 +25,6 @@ For each detector the following plots are produced:
 ### Usage
 ```toml
 [ClusteringGeneric]
+file_input = "data_file"
 
 ```
