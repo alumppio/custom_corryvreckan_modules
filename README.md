@@ -53,12 +53,12 @@ There is a list of tutorials and references on the [corryvreckan project website
 
 There is also a quite detailed [lab course on silicon sensors](https://www.physi.uni-heidelberg.de/Einrichtungen/FP/anleitungen/F96.pdf) where corryvreckan is used.
 
- [My lab report](Lab_report_CERN.pdf) describes quite well what I did in Corryvreckan.
+ [My lab report](Lab_report_CERN.pdf) describes quite well what I did in corryvreckan.
 
 
 ## Using my modules to get tracking data with gaseous strip detectors
 
-I found two approaches that can successfully create tracking data using corryvreckan: by creating Cluster objects from reconstructed gaseous strip detector clusters or by creating Pixel objects from matched reconstructed XY clusters in Corryvreckan. I found the method of creating Pixel objects out of matched clusters to be the better one.
+I found two approaches that can successfully create tracking data using corryvreckan: by creating Cluster objects from reconstructed gaseous strip detector clusters or by creating Pixel objects from matched reconstructed XY clusters in corryvreckan. I found the method of creating Pixel objects out of matched clusters to be the better one.
 
 The approaches are explained in more detail in [a lab report of my summer work at CERN].
 
@@ -113,7 +113,7 @@ In this approach I used [ClusteringGeneric] module to read in cluster data recon
 ```
 ### Detectors file
 
-In this approach, I defined the detector as a pixel detector with 256x256 pixels and the pixel pitches corresponded to the strip lengths 400um,400um.
+In this approach, I defined the detector as a pixel detector with 256x256 pixels and the pixel pitches corresponded to the strip lengths 400um,400um. Spatial resolution is set as one strip length in both dimensions.
 > Example GEMXY detector
 ```
 [GEMXY3]
@@ -132,9 +132,54 @@ type = "gemrd51"
 
 ### Alignment 
 
-Before tracking the telescope needs to be aligned. This is done using default modules [Prealignment] and [AlignmentTrackChi2]. First you do a run with the [Prealignment]. In this you only need to have [Metronome], [ClusteringGeneric] and the [Prealignment] modules. After the prealignment run, you run another run with [Metronome], [ClusteringGeneric], [Tracking4D] and [AlignmentTrackChi2] modules using the updated detectors file you got from the prealignment. If you have a DUT, this also needs to be aligned. DUT is automatically excluded from tracking so the detector need to associated with the tracking using [DUTAssociation] module. DUT alignment run is done using [Metronome], [ClusteringGeneric], [Tracking4D], [DUTAssociation], [AlignmentDUTResidual] modules. The alignment can be checked using [Correlations] module which provides correlation plots.
+Before tracking the telescope needs to be aligned. This is done using default modules [Prealignment] and [AlignmentTrackChi2]. First you do a run with the [Prealignment]. In this you only need to have [Metronome], [ClusteringGeneric] and the [Prealignment] modules. After the prealignment run, you run another run with [Metronome], [ClusteringGeneric], [Tracking4D] and [AlignmentTrackChi2] modules using the updated detectors file you got from the prealignment. If you have a DUT, this also needs to be aligned. DUT is automatically excluded from tracking so the detector need to associated with the tracking using [DUTAssociation] module. DUT alignment run is done using [Metronome], [ClusteringGeneric], [Tracking4D], [DUTAssociation], [AlignmentDUTResidual] modules. The alignment can be checked using [Correlations] module which provides correlation plots. 
+
+### Tracking 
+
+After the alignment is done and checked, you can start to take tracking data. All of the alignment modules and the update\_detectors\_file=... need to be commented out, and the tracking can be taken using [Metronome], [ClusteringGeneric], [Correlations] and [Tracking4D] modules. If you have a DUT, you also need to include it using [DUTAssociation] module. **The [AnalysisDUT] module doesn't work with this only cluster object approach, as we get a segmentation fault when it is used!**
 
 
+## Approach 2: creating Pixel objects out of externally matched XY cluster data
+
+In this approach one can use the [ClusterLoaderVMM3a] or [EventLoaderAPV25] modules to read in the data. 
+
+## 2: [ClusterLoaderVMM3a]
+
+The [ClusterLoaderVMM3a] reads in a ROOT TTree that is in the format of [clusters\_detector structure in vmm-sdat.](https://github.com/ess-dmsc/vmm-sdat/blob/main/src/DataStructures.h#L44). From this structure, *time0, det, adc0, adc1, pos0, pos1* are read in, or if "charge2" is used *pos0_charge2 and pos1_charge2* are read in instead of *pos0 and pos1*. For each of the events, *time0* is used to read in the data in the time interval of the Event object that the [Metronome] creates. Out of this externally matched XY cluster data, we create Pixel objects in corryvreckan and then do the "clustering" again using [Clustering4D] to create Cluster objects. From these Cluster objects, we create tracks using [Tracking4D]. 
+
+### Detectors file
+
+The detector is defined as a pixel detector with 256x256 pixels and the pixel pitches corresponded to the strip lengths 400um,400um. Spatial resolution is set as one strip length in both dimensions.
+> Example GEMXY detector
+```
+[GEMXY3]
+coordinates = "cartesian"
+material_budget = 0.01068
+number_of_pixels = 256, 256
+orientation = 2.86456deg,-0.777332deg,0.674887deg
+orientation_mode = "xyz"
+pixel_pitch = 400um,400um
+position = 3.54153mm,2.59518mm,-960mm
+spatial_resolution = 400um,400um
+time_resolution = 20ns
+type = "pixel_gemrd51"
+```
+
+
+
+
+### Alignment 
+
+Same as in the previous approach, the telescope needs to be aligned before tracking. This is done using default modules [Prealignment] and [AlignmentTrackChi2]. First you do a run with the [Prealignment]. In this you only need to have [Metronome], [ClusterLoaderVMM3a] and the [Prealignment] modules. After the prealignment run, you run another run with [Metronome], [ClusterLoaderVMM3a], [Tracking4D] and [AlignmentTrackChi2] modules using the updated detectors file you got from the prealignment. If you have a DUT, this also needs to be aligned. DUT is automatically excluded from tracking so the detector need to associated with the tracking using [DUTAssociation] module. DUT alignment run is done using [Metronome], [ClusterLoaderVMM3a], [Tracking4D], [DUTAssociation], [AlignmentDUTResidual] modules. The alignment can be checked using [Correlations] module which provides correlation plots. 
+
+### Tracking
+
+After the alignment is done and checked, one can start taking tracking data.  All of the alignment modules and the update\_detectors\_file=... need to be commented out, and the tracking run is done using [Metronome], [ClusterLoaderVMM3a], [Tracking4D], [DUTAssociation], [AnalysisDUT] modules. If you are using the modified [Tracking4D] from this repository then automatically [a double gaussian fit from vmm-sdat](https://github.com/ess-dmsc/vmm-sdat/blob/main/analysis/application_rd51_beam_telescope/spatialResolution.cpp#L74) is used. 
+
+
+## 2: [EventLoaderAPV25]
+
+This module uses the THit ROOT TTree that AMORE produces. 
 
 
 
