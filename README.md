@@ -53,7 +53,7 @@ There is a list of tutorials and references on the [corryvreckan project website
 
 There is also a quite detailed [lab course on silicon sensors](https://www.physi.uni-heidelberg.de/Einrichtungen/FP/anleitungen/F96.pdf) where corryvreckan is used.
 
- [My lab report](Lab_report_CERN.pdf) describes quite well what I did in corryvreckan.
+ [This report](drd1_note_draft.pdf) describes quite well what I did in corryvreckan.
 
 
 ## Using my modules to get tracking data with gaseous strip detectors
